@@ -446,6 +446,12 @@ The result is inserted as it comes in the compilation buffer."
 		  :documentation
 		  "Name of BeanShell class.")
 
+   (name          :initarg :name
+		  :initform "BeanShell"
+		  :type string
+		  :documentation
+		  "Descriptive name of the shell (BeanShell, Groovysh).")
+
    (separate-error-buffer :initarg :separate-error-buffer
 			  :initform nil
 			  :type boolean
@@ -554,7 +560,8 @@ to the string form required by the vm."
 
         (setq vm-args (append vm-args (oref this vm-args)))
         (setq vm-args (append vm-args bsh-vm-args))
-        (setq vm-args (append vm-args (list (oref this class-name))))
+        (when-let ((class-name (oref this class-name)))
+          (setq vm-args (append vm-args (list class-name))))
 
         (with-current-buffer native-buff
           (erase-buffer)
@@ -567,13 +574,13 @@ to the string form required by the vm."
 
           (setq bsh-the-bsh this))
 
-        (message "%s" "Starting the BeanShell. Please wait...")
+        (message "Starting the %s. Please wait..." (oref this name))
         (bsh-comint-buffer-exec buffer (oref this vm) vm-args)
 
         (if display-buffer
             (bsh-buffer-display buffer)))
     (when display-buffer
-      (message "The BeanShell is already running.")
+      (message "The %s is already running." (oref this name))
       (bsh-buffer-display (oref this buffer)))))
 
 (defmethod bsh-snag-lisp-output ((this bsh) process output)
