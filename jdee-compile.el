@@ -1272,7 +1272,7 @@ If t (or other non-nil non-number) then kill in 2 secs."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defclass jdee-compile-javac-18 (jdee-compile-javac-17)
   ()
-  "Class of JDK 1.7 javac compilers.")
+  "Class of JDK 1.8 javac compilers.")
 
 (defmethod initialize-instance ((this jdee-compile-javac-18) &rest fields)
  ;; Call parent initializer.
@@ -1281,6 +1281,23 @@ If t (or other non-nil non-number) then kill in 2 secs."
 
   ;; Set compiler version.
   (oset this version "1.8"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                                                                            ;;
+;; J2SDK 1.9 Compiler                                                         ;;
+;;                                                                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defclass jdee-compile-javac-19 (jdee-compile-javac-18)
+  ()
+  "Class of JDK 1.9 javac compilers.")
+
+(defmethod initialize-instance ((this jdee-compile-javac-19) &rest fields)
+ ;; Call parent initializer.
+
+  (call-next-method)
+
+  ;; Set compiler version.
+  (oset this version "1.9"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                                                                            ;;
@@ -1369,7 +1386,8 @@ If t (or other non-nil non-number) then kill in 2 secs."
    (jdee-compile-javac-15 "javac 1.5.x")
    (jdee-compile-javac-16 "javac 1.6.x")
    (jdee-compile-javac-17 "javac 1.7.x")
-   (jdee-compile-javac-18 "javac 1.8.x"))
+   (jdee-compile-javac-18 "javac 1.8.x")
+   (jdee-compile-javac-19 "javac 1.9.x"))
   "List of supported javac compilers.")
 
 (defun jdee-compile-get-javac ()
