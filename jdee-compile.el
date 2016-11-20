@@ -730,7 +730,12 @@ If t (or other non-nil non-number) then kill in 2 secs."
    (use-server-p     :initarg :use-server-p
 		     :type boolean
 		     :documentation
-		     "Run as a compile server in the Beanshell."))
+		     "Run as a compile server in the Beanshell.")
+   (exec-method      :initarg exec-method
+                     :type string
+                     :initform "jde.util.CompileServer.compile"
+                     :documentation
+                     "The name of the method to call on the server."))
   "Class of Java compilers.")
 
 (defmethod jdee-compile-classpath-arg ((this jdee-compile-compiler))
@@ -942,6 +947,8 @@ If t (or other non-nil non-number) then kill in 2 secs."
 	(setq compilation-in-progress
 	      (cons proc compilation-in-progress))))))
 
+
+
 (defmethod jdee-compile-run-server ((this jdee-compile-compiler))
   (let* ((directory-sep-char ?/)
 	   (args
@@ -996,7 +1003,7 @@ If t (or other non-nil non-number) then kill in 2 secs."
        (oref-default 'jdee-bsh the-bsh)
        (concat
 	(format
-	 "jde.util.CompileServer.compile(%s);"
+	 "%s(%s);" (oref this exec-method)
 	 arg-array)
 	"\n")
        (oref this buffer))))

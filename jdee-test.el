@@ -57,10 +57,70 @@ compile.el version by checking if
   :group 'jdee-compile-options
   :type 'function)
 
+;;
+;; Class for running unit tests
+;;
+
+(defclass jdee-unit-test-runner (jdee-compile-compiler)
+  ()
+  "Class of unit test runners.")
+
+(defmethod initialize-instance ((this jdee-unit-test-runner) &rest fields)
+  "Initialize by find the compiler for the JDK using it to initialize this instance."
+  ;; Call parent initializer.
+  (call-next-method)
+  (let* ((compiler  (jdee-compile-get-the-compiler))
+	 (name (eieio-object-name-string compiler)))
+    (eieio-object-set-name-string this (format "%s %s" name "unit test runner"))
+    (oset this path (jdee-get-jdk-prog 'java))
+    (oset this exec-method "jde.unittest.UnitTestServer.unitTest")
+         
+    ;; TODO: There has to be a function to copy slots from one object
+    ;; to another
+    (with-slots (version buffer window interactive-args use-server-p) compiler
+      (when (slot-boundp compiler :version)
+	(oset this :version version))
+      (when (slot-boundp compiler :buffer)
+	(oset this :buffer buffer))
+      (when (slot-boundp compiler :window)
+	(oset this :window window))
+      (when (slot-boundp compiler :interactive-args)
+	(oset this :interactive-args interactive-args))
+      (when (slot-boundp compiler :use-server-p)
+	(oset this :use-server-p use-server-p)))))
+
+(defmethod jdee-compile-command-line-args ((this jdee-unit-test-runner))
+  "Get additional command line arguments for this compiler."
+  (list (jdee-fqn)))
+
+(defmethod jdee-compile-classpath-arg ((this jdee-unit-test-runner))
+  "Returns the classpath argument for this unit test runner."
+  (let ((classpath
+	 (if jdee-run-option-classpath
+	     jdee-run-option-classpath
+	   (jdee-get-global-classpath)))
+	(symbol
+	 (if jdee-run-option-classpath
+	     'jdee-run-option-classpath
+	   'jdee-global-classpath)))
+    (if classpath
+	(list
+	 "-classpath"
+	 (jdee-build-classpath
+	  classpath
+	  symbol)
+	 ))))
+
+
+;;
+;; end of class
+;;
+
 (defun jdee-test-function-default ()
-  "Default unit test function.  
-Currently just tells the user unit testing is not supported"
-  (message "Unit test support is not yet implemented"))
+  "Default unit test function. "
+  (let* ((runner (make-instance 'jdee-unit-test-runner)))
+
+    (jdee-compile-compile runner)))
 
 ;;;###autoload
 (defun jdee-test-unittest ()
