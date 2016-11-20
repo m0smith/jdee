@@ -8,6 +8,7 @@
 (require 'ert)
 (require 'el-mock)
 (require 'jdee-maven)
+(require 'jdee-parse)
 (require 'cl)
 
 
@@ -27,19 +28,23 @@ Requires directory-files and file-readable-p to be stubbed so it
 doesn't try to hit the file system."
   (let* ((without-pom '("." ".."))
          (with-pom '("." ".." "pom.xml"))
-         (dirs (list (list "/a" without-pom)
-                     (list "/a/b" without-pom)
-                     (list "/a/b/c" with-pom)
-                     (list "/a/b/c/src" without-pom)
-                     (list "/a/b/c/src/main" without-pom)
-                     (list "/a/b/c/src/main/java" without-pom))))
+         (dirs (list (list (expand-file-name "/a") without-pom)
+                     (list (expand-file-name "/a/b") without-pom)
+                     (list (expand-file-name "/a/b/c") with-pom)
+                     (list (expand-file-name "/a/b/c/src") without-pom)
+                     (list (expand-file-name "/a/b/c/src/main") without-pom)
+                     (list (expand-file-name "/a/b/c/src/main/java") without-pom))))
 
 
     (let ((default-directory (caar (last dirs))))
       
-      (cl-letf (((symbol-function 'directory-files) (lambda (d) (cadr (assoc d dirs)))))
+      (cl-letf (((symbol-function 'directory-files)
+                 (lambda (d)
+                   (cadr (assoc d dirs)))))
+        
         (with-mock
           (stub file-readable-p => t)
+          (stub file-exists-p => t)
           
           (should (string= (format "%s/" (car (nth 2 dirs)))
                            (jdee-maven-get-default-directory))))))))
