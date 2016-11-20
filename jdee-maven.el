@@ -393,17 +393,27 @@ Return the tag of the method if found, nil otherwise."
 
 (defun jdee-maven-unit-test (&optional path)
   
-  "Unit test using maven with project based in PATH (default to `default-directory')
+  "Unit test using maven with project based in PATH (default to
+  `default-directory')
 
-Tries to limit the scope of the unit test based on current point.  If in a class that 
-is a test class, just run that file.
+Tries to limit the scope of the unit test based on current point.
+If in a class that is a test class, just run that file.
 
-With a single prefix C-u, it will skip trying to run a single method.  With a double prefix C-u C-u it will skip trying to run a single class as well.
+With a single prefix C-u, it will skip trying to run a single
+method.  With a double prefix C-u C-u it will skip trying to run
+a single class as well.
+
+Also respects `jdee-compiler' in that it will use the server unit
+test runner instead of spawnign out to maven
 
 "
-  (interactive)
-  (let* ((default-directory (jdee-maven-get-default-directory path))
-         ;; FIXME: use a hook instead
+ jdee-compiler '("javac server")
+  
+ (interactive)
+ (if (string= "javac server" (car jdee-compiler))
+     (jdee-test-function-default)
+   (let* ((default-directory (jdee-maven-get-default-directory path))
+          ;; FIXME: use a hook instead
          (args (or (jdee-maven-unit-test-run-method-args)
                    (jdee-maven-unit-test-run-class-args)
                    "test"))
@@ -422,7 +432,7 @@ With a single prefix C-u, it will skip trying to run a single method.  With a do
                          2              ;Hyperlink = FQN
                          '(1  compilation-info-face) ;test method name
                          '(2  compilation-error-face) ;FQN
-                         '(5  compilation-message-face)))))) ; error message
+                         '(5  compilation-message-face))))))) ; error message
 
 ;;
 ;; Building
