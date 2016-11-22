@@ -59,7 +59,9 @@
   "Class of unit test runners.")
 
 (defmethod initialize-instance ((this jdee-unit-test-runner) &rest fields)
-  "Initialize by find the compiler for the JDK using it to initialize this instance."
+  "Initialize by finding the compiler and then updating slots to
+run unit test instead of compiling.  Support both running on disk
+or using the bsh server."
   ;; Call parent initializer.
   (call-next-method)
   (let* ((compiler  (jdee-compile-get-the-compiler))
@@ -83,11 +85,13 @@
 	(oset this :use-server-p use-server-p)))))
 
 (defmethod jdee-compile-command-line-args ((this jdee-unit-test-runner))
-  "Get additional command line arguments for this compiler."
+  "Add the fully qualified name of the class to the command line."
   (list (jdee-fqn)))
 
 (defmethod jdee-compile-classpath-arg ((this jdee-unit-test-runner))
-  "Returns the classpath argument for this unit test runner."
+  "Returns the classpath argument for this unit test runner based
+on either' `jdee-global-classpath' or
+`jdee-run-option-classpath', perferring the latter."
   (let ((classpath
 	 (if jdee-run-option-classpath
 	     jdee-run-option-classpath
@@ -104,6 +108,13 @@
 	  symbol)
 	 ))))
 
+(defmethod jdee-compile-run-server ((this jdee-unit-test-runner))
+  ""
+  (let ((old jdee-compile-option-hide-classpath))
+    (setq jdee-compile-option-hide-classpath t)
+    (call-next-method)
+    (setq jdee-compile-option-hide-classpath old)))
+  
 
 ;;
 ;; end of class
