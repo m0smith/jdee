@@ -984,6 +984,19 @@ If t (or other non-nil non-number) then kill in 2 secs."
 			    jdee-compile-option-hide-classpath)
 		       (progn
 			 (setq flag nil)
+                         (insert-button "Show Classpath"
+                                        'text x
+                                        'action
+                                        (lambda(x) (message "%s" (overlay-get x 'text))))
+                         (insert " ")
+                         (insert-button "Copy Classpath"
+                                        'text x
+                                        'action
+                                        (lambda(x)
+                                          (kill-new (overlay-get x 'text))
+                                          (message "Classpath added to kill ring")))
+                         (insert "\n\n")
+                         
 			 "...")
 		     (if (not (string= x "-classpath"))
 			 x
