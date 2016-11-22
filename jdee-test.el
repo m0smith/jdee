@@ -109,7 +109,7 @@ on either' `jdee-global-classpath' or
 	 ))))
 
 (defmethod jdee-compile-run-server ((this jdee-unit-test-runner))
-  ""
+  "Don't show the classpath in the output buffer."
   (let ((old jdee-compile-option-hide-classpath))
     (setq jdee-compile-option-hide-classpath t)
     (call-next-method)
