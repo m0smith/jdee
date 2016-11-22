@@ -404,11 +404,9 @@ method.  With a double prefix C-u C-u it will skip trying to run
 a single class as well.
 
 Also respects `jdee-compiler' in that it will use the server unit
-test runner instead of spawnign out to maven
+test runner instead of spawning out to maven
 
 "
- jdee-compiler '("javac server")
-  
  (interactive)
  (if (string= "javac server" (car jdee-compiler))
      (jdee-test-function-default)
