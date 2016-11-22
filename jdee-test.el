@@ -50,6 +50,50 @@
   :group 'jdee-compile-options
   :type 'function)
 
+
+(defun jdee-test-next-error-function (n &optional reset)
+  "This function is a value of `next-error-function' that supports
+the results of mvn test. 
+
+Return the tag of the method if found, nil otherwise."
+  
+  (let ((next-fn 'compilation-next-error-function)
+        (compile-buffer (current-buffer)))
+    (funcall next-fn n reset)
+    (let* ((method-name   (with-current-buffer compile-buffer
+                            (get-text-property (point) 'method-name)))
+           (class-name   (with-current-buffer compile-buffer
+                           (get-text-property (point) 'class-name)))
+           (tags (semantic-something-to-tag-table (current-buffer)))
+           (class-tag (jdee-maven-find-tag-by-name-and-type class-name 'type tags))
+           (class-members (plist-get (nth 2 class-tag) :members))
+           (method-tag (jdee-maven-find-tag-by-name-and-type method-name 'function class-members)))
+      (when method-tag
+        (semantic-go-to-tag method-tag)
+        (semantic-momentary-highlight-tag method-tag)
+        method-tag))))
+      
+
+(defvar jdee-test-error-regexp
+  
+  (format "%s(%s):\\(.*\\)" (jdee-parse-java-name-part-re) (jdee-parse-java-fqn-re))
+  " Looks for something like 
+
+  testConnectionProxy2CallJava2(jde.juci.ConnectionImplTest): expected:<hello worl[ ]d> but was:<hello worl[]d>
+
+  Match regions are
+1 - the test method name
+2 - FQN of the unit test
+3 - package name of the unit test
+4 - class name of the unit test
+5 - the error message
+")
+
+
+  
+(defvar jdee-test-finish-hook nil)
+
+
 ;;
 ;; Class for running unit tests
 ;;
@@ -110,10 +154,25 @@ on either' `jdee-global-classpath' or
 
 (defmethod jdee-compile-run-server ((this jdee-unit-test-runner))
   "Don't show the classpath in the output buffer."
-  (let ((old jdee-compile-option-hide-classpath))
-    (setq jdee-compile-option-hide-classpath t)
-    (call-next-method)
-    (setq jdee-compile-option-hide-classpath old)))
+  (let ((jdee-compile-option-hide-classpath t)
+        (compile-buffer(oref (oref this buffer) buffer)))
+    (with-current-buffer compile-buffer
+      (setq next-error-function 'jdee-test-next-error-function)
+      (setq compilation-finish-functions
+            (lambda (buf msg)
+              (run-hook-with-args 'jdee-test-finish-hook buf msg)
+              (setq compilation-finish-functions nil)))
+      
+      (add-to-list 'compilation-error-regexp-alist
+                   (list jdee-test-error-regexp
+                         'jdee-maven-file nil nil nil
+                         2              ;Hyperlink = FQN
+                         '(1  compilation-info-face) ;test method name
+                         '(2  compilation-error-face) ;FQN
+                         '(5  compilation-message-face)))) ; error message
+
+    (call-next-method)))
+    
   
 
 ;;
