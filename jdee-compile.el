@@ -654,12 +654,16 @@ If t (or other non-nil non-number) then kill in 2 secs."
   (interactive)
   (customize-apropos "jdee-compile-options" 'groups))
 
-(defclass jdee-compile-server-buffer (bsh-compilation-buffer) ()
+(defclass jdee-compile-server-buffer (bsh-compilation-buffer)
+  ((buffer-name   :initarg :buffer-name
+		  :initform "*JDEE Compile Server*"
+		  :type string
+		  :documentation
+		  "Name of buffer used to interact with BeanShell process."))
   "Compiler server buffer.")
 
 (defmethod bsh-compilation-buffer-create-native-buffer ((this jdee-compile-server-buffer))
   "Creates the native Emacs buffer for the JDEE compile server."
-  (oset this buffer-name "*JDEE Compile Server*")
   (oset this buffer (get-buffer-create (oref this buffer-name))))
 
 (defclass jdee-compile-exec-buffer (bsh-compilation-buffer) ()
@@ -667,7 +671,7 @@ If t (or other non-nil non-number) then kill in 2 secs."
 
 (defmethod initialize-instance ((this jdee-compile-exec-buffer) &rest fields)
   "Constructor for exec compilation buffer instance."
-
+  (call-next-method)
   (bsh-compilation-buffer-create-native-buffer this)
 
   (oset
@@ -711,6 +715,11 @@ If t (or other non-nil non-number) then kill in 2 secs."
 		     :type string
 		     :documentation
 		     "Compiler version.")
+   (buffer-name      :initarg :buffer-name
+                     :initform "*JDEE Compile Server 555*"
+		     :type string
+		     :documentation
+		     "The name of the compilation buffer.")
    (path             :initarg :path
 		     :type string
 		     :documentation
@@ -973,14 +982,14 @@ If t (or other non-nil non-number) then kill in 2 secs."
 
       (with-current-buffer (oref (oref this buffer) buffer)
 
-	(insert "CompileServer output:\n\n")
+	(insert "Compile Server output:\n\n")
 
 	(let* ((inhibit-read-only t)
 	       flag
 	       (arg-string
 		(mapconcat
 		 (lambda (x)
-		   (if (and flag
+		   (if (and flag 
 			    jdee-compile-option-hide-classpath)
 		       (progn
 			 (setq flag nil)
@@ -1036,7 +1045,11 @@ If t (or other non-nil non-number) then kill in 2 secs."
       (oset this buffer (jdee-compile-server-buffer "compilation buffer"))
     (oset this buffer (jdee-compile-exec-buffer "compilation buffer")))
 
-
+  (when (slot-boundp this buffer-name)
+    (let ((name (oref this buffer-name)))
+      (when name 
+        (oset (oref this buffer) buffer-name name))))
+  
   ;; Pop to compilation buffer.
   (let* ((outbuf (oref (oref this buffer) buffer))
          (outwin (display-buffer outbuf)))
@@ -1325,7 +1338,7 @@ If t (or other non-nil non-number) then kill in 2 secs."
 ;;                                                                            ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defclass jdee-compile-ejc-server (jdee-compile-compiler)
-  ()
+  ((buffer-name "*JDEE EJC Compile Server*"))
   "Class for using the Eclipse java compiler as a JDEE compile server."
 )
 
@@ -1359,7 +1372,7 @@ If t (or other non-nil non-number) then kill in 2 secs."
 
       (with-current-buffer (oref (oref this buffer) buffer)
 
-	(insert "CompileServer output:\n\n")
+	(insert "EJC Compile Server output:\n\n")
 
 	(let (flag temp)
 	  (setq temp

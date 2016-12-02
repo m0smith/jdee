@@ -34,7 +34,12 @@
   ((post-fn         :initarg :post-fn
                     :type function
                     :documentation
-                    "Function to run after compilation is complete."))
+                    "Function to run after compilation is complete.")
+   (buffer-name   :initarg :buffer-name
+		  :initform "*JDEE Flycheck Compile Server (%s)*"
+		  :type string
+		  :documentation
+		  "Name of buffer used to interact with BeanShell process."))
   "Compiler used by flycheck mode to compile in the background.
   Hides the output buffer so the user can continue to edit the
   file.")
@@ -42,7 +47,7 @@
 (defmethod initialize-instance ((this jdee-flycheck-compiler) &rest fields)
  ;; Call parent initializer.
   (call-next-method)
-
+  
   (let ((compiler (jdee-compile-get-the-compiler)))
     (when (slot-boundp compiler 'use-server-p)
       (oset this use-server-p (oref compiler use-server-p)))
@@ -65,14 +70,18 @@
 (defmethod jdee-compile-compile ((this jdee-flycheck-compiler))
 
   (if (oref this :use-server-p)
-      (oset this buffer (jdee-compile-server-buffer "compilation buffer"))
-    (oset this buffer (jdee-compile-exec-buffer "compilation buffer")))
+      (oset this buffer (jdee-compile-server-buffer "flycheck compilatation buffer"
+                                                    :buffer-name (format (oref this buffer-name)
+                                                                         (file-name-nondirectory (buffer-file-name)))))
+    (oset this buffer (jdee-compile-exec-buffer "flycheck compilation buffer"
+                                                :buffer-name (format (oref this buffer-name)
+                                                                     (file-name-nondirectory (buffer-file-name))))))
   (with-current-buffer (oref (oref this buffer) buffer)
     (add-hook 'jdee-compile-finish-hook
               (oref this post-fn)
               nil t)
     (add-hook 'jdee-compile-finish-hook 'jdee-flycheck-unmute t))
-
+  
   ;; Pop to compilation buffer.
   (let* ((outbuf (oref (oref this buffer) buffer)))
     ;;    (outwin (display-buffer outbuf)))
@@ -81,8 +90,8 @@
 
     (if compilation-process-setup-function
         (funcall compilation-process-setup-function))
-
-    (jdee-compile-launch this)
+    (let ((jdee-compile-option-hide-classpath t))
+      (jdee-compile-launch this))
 
     (setq compilation-last-buffer outbuf)))
 
@@ -113,7 +122,7 @@ An error looks like:
 The caret indicates the column of the error.  This function looks
 for the caret and converts it to a column number."
   (when (looking-at "\\( *\\)^")
-    (length (match-string 1))))
+    (1+ (length (match-string 1)))))
 
 (defun jdee-flycheck-compile-buffer-after (checker cback orig-file orig-buffer
                                                    temp-file temp-buffer)

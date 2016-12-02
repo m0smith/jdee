@@ -241,12 +241,17 @@ buffer."
 
 
 (defclass bsh-compilation-buffer (bsh-buffer)
-  ()
+  ((buffer-name   :initarg :buffer-name
+		  :initform "*bsh compilation*"
+		  :type string
+		  :documentation
+		  "Name of buffer used to interact with BeanShell process."))
   "Implements a `compilation-mode' buffer for BeanShell output.")
 
 (defmethod initialize-instance ((this bsh-compilation-buffer) &rest fields)
   "Constructor for BeanShell compilation buffer instance."
-
+  (call-next-method)
+  
   (bsh-compilation-buffer-create-native-buffer this)
 
   (oset
@@ -262,7 +267,7 @@ buffer."
 
 (defmethod bsh-compilation-buffer-create-native-buffer ((this bsh-compilation-buffer))
   "Creates the native Emacs buffer encapsulated by this eieio object."
-  (oset this buffer-name "*bsh compilation*")
+
   (oset this buffer (get-buffer-create (oref this buffer-name))))
 
 (defmethod bsh-compilation-buffer-set-mode ((this bsh-compilation-buffer))
@@ -904,7 +909,11 @@ by Pat Niemeyer."
 	      (expand-file-name "doc/html/bsh-ug/bsh-ug.html" jdee-dir))))
     (if (and
 	 bsh-help
-	 (file-exists-p bsh-help))
+(buffer-name   :initarg :buffer-name
+		  :initform "*bsh compilation*"
+		  :type string
+		  :documentation
+		  "Name of buffer used to interact with BeanShell process.")	 (file-exists-p bsh-help))
 	(browse-url (concat "file://" bsh-help))
       (signal 'error '("Cannot find BeanShell help file.")))))
 
