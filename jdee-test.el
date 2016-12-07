@@ -47,8 +47,23 @@
 
 (defcustom jdee-test-function 'jdee-junit-run
     "The function to run to do a unit test"
-  :group 'jdee-compile-options
+  :group 'jdee-test-options
   :type 'function)
+
+(defcustom jdee-test-option-server-log-level "OFF"
+    "The logging level to send to the jdee-server when runnung unit tests"
+  :group 'jdee-test-options
+  :type '(choice
+          (const :tag "All" "ALL")
+          (const :tag "Severe" "SEVERE")
+          (const :tag "Warning" "WARNING")
+          (const :tag "Info" "INFO")
+          (const :tag "Config" "CONFIG")
+          (const :tag "Fine" "FINE")
+          (const :tag "Finer" "FINER")
+          (const :tag "Finest" "FINEST")
+          (const :tag "Off" "OFF")
+          ))
 
 
 (defun jdee-test-next-error-function (n &optional reset)
@@ -134,8 +149,10 @@ or using the bsh server."
 	(oset this :use-server-p use-server-p)))))
 
 (defmethod jdee-compile-command-line-args ((this jdee-unit-test-runner))
-  "Add the fully qualified name of the class to the command line."
-  (list (jdee-fqn) "FINER"))
+  "Add the fully qualified name of the class and logging level to
+the command line."
+  (list (jdee-fqn)
+        jdee-test-option-server-log-level))
 
 (defmethod jdee-compile-classpath-arg ((this jdee-unit-test-runner))
   "Returns the classpath argument for this unit test runner based
