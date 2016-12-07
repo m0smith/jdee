@@ -51,7 +51,7 @@
   :type 'function)
 
 (defcustom jdee-test-option-server-log-level "OFF"
-    "The logging level to send to the jdee-server when runnung unit tests.
+    "The logging level to send to the jdee-server when running unit tests.
 
 See https://docs.oracle.com/javase/7/docs/api/java/util/logging/Level.html"
   :group 'jdee-test-options
@@ -65,6 +65,7 @@ See https://docs.oracle.com/javase/7/docs/api/java/util/logging/Level.html"
           (const :tag "Finer" "FINER")
           (const :tag "Finest" "FINEST")
           (const :tag "Off" "OFF")
+          (string :tag "Other")
           ))
 
 
