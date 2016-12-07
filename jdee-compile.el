@@ -666,7 +666,12 @@ If t (or other non-nil non-number) then kill in 2 secs."
   "Creates the native Emacs buffer for the JDEE compile server."
   (oset this buffer (get-buffer-create (oref this buffer-name))))
 
-(defclass jdee-compile-exec-buffer (bsh-compilation-buffer) ()
+(defclass jdee-compile-exec-buffer (bsh-compilation-buffer)
+  ((buffer-name   :initarg :buffer-name
+		  :initform "*JDEE Compile Exec*"
+		  :type string
+		  :documentation
+		  "Name of buffer used to interact with BeanShell process."))
   "Compiler exec buffer.")
 
 (defmethod initialize-instance ((this jdee-compile-exec-buffer) &rest fields)
@@ -1041,15 +1046,12 @@ If t (or other non-nil non-number) then kill in 2 secs."
 
 (defmethod jdee-compile-compile ((this jdee-compile-compiler))
 
-  (if (oref this :use-server-p)
-      (oset this buffer (jdee-compile-server-buffer "compilation buffer"))
-    (oset this buffer (jdee-compile-exec-buffer "compilation buffer")))
+  (let* ((name (format "%s buffer" (eieio-object-name-string this)))
+         (buffer-name (oref this buffer-name)))
+    (if (oref this :use-server-p)
+        (oset this buffer (jdee-compile-server-buffer name :buffer-name buffer-name))
+      (oset this buffer (jdee-compile-exec-buffer name :buffer-name buffer-name))))
 
-  (when (slot-boundp this buffer-name)
-    (let ((name (oref this buffer-name)))
-      (when name 
-        (oset (oref this buffer) buffer-name name))))
-  
   ;; Pop to compilation buffer.
   (let* ((outbuf (oref (oref this buffer) buffer))
          (outwin (display-buffer outbuf)))

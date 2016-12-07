@@ -99,7 +99,11 @@ Return the tag of the method if found, nil otherwise."
 ;;
 
 (defclass jdee-unit-test-runner (jdee-compile-compiler)
-  ()
+  ((buffer-name   :initarg :buffer-name
+		  :initform "*JDEE Unit Test Server*"
+		  :type string
+		  :documentation
+		  "Name of buffer used to interact with BeanShell process."))
   "Class of unit test runners.")
 
 (defmethod initialize-instance ((this jdee-unit-test-runner) &rest fields)
@@ -113,7 +117,8 @@ or using the bsh server."
     (eieio-object-set-name-string this (format "%s %s" name "unit test runner"))
     (oset this path (jdee-get-jdk-prog 'java))
     (oset this exec-method "jde.unittest.UnitTestServer.unitTest")
-         
+    (oset this buffer-name (format "*JDEE Unit Test Server <%s>*" (file-name-nondirectory (buffer-file-name))))
+    
     ;; TODO: There has to be a function to copy slots from one object
     ;; to another
     (with-slots (version buffer window interactive-args use-server-p) compiler
@@ -130,14 +135,15 @@ or using the bsh server."
 
 (defmethod jdee-compile-command-line-args ((this jdee-unit-test-runner))
   "Add the fully qualified name of the class to the command line."
-  (list (jdee-fqn)))
+  (list (jdee-fqn) "FINER"))
 
 (defmethod jdee-compile-classpath-arg ((this jdee-unit-test-runner))
   "Returns the classpath argument for this unit test runner based
 on either' `jdee-global-classpath' or
 `jdee-run-option-classpath', perferring the latter."
   (let ((classpath
-	 (if jdee-run-option-classpath
+	 (if (and jdee-run-option-classpath
+                  (listp jdee-run-option-classpath))
 	     jdee-run-option-classpath
 	   (jdee-get-global-classpath)))
 	(symbol
